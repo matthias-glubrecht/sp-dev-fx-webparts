@@ -1,20 +1,25 @@
-import { WebPartContext } from "@microsoft/sp-webpart-base";
-import { sp } from "@pnp/sp/presets/all";
-import { IPropertyFieldGroupOrPerson } from "@pnp/spfx-property-controls";
+import type { WebPartContext } from "@microsoft/sp-webpart-base";
+import type { SPFI } from "@pnp/sp";
+import { Caching } from "@pnp/queryable";
+import "@pnp/sp/webs";
+import "@pnp/sp/site-groups/web";
+import type { IAudience } from './IAudience';
 
 export class UserGroupCheck {
 
     _claimUserPrefix = "i:0#.f|membership";
     _claimGroupPrefix = "c:0o.c|federateddirectoryclaimprovider|";
     _aadGroupCacheKey = "SPFxModernScriptEditorAudienceAADCache";
-    _audiences: IPropertyFieldGroupOrPerson[];
+    _audiences: IAudience[];
     _audienceCacheDuration: number; // hours
     _context: WebPartContext;
+    _sp: SPFI;
 
-    constructor(audiences: IPropertyFieldGroupOrPerson[], audienceCacheDuration: number, context: WebPartContext) {
+    constructor(audiences: IAudience[], audienceCacheDuration: number, context: WebPartContext, sp: SPFI) {
         this._audiences = audiences;
         this._audienceCacheDuration = audienceCacheDuration || 24;
         this._context = context;
+        this._sp = sp;
     }
 
     public async CheckAudiences(): Promise<boolean> {
@@ -22,11 +27,11 @@ export class UserGroupCheck {
 
         // Check if an audience is a the current person first as it's no API calls
         for (const audience of this._audiences) {
-            if (audience.id.replace(this._claimUserPrefix, "").toLocaleLowerCase() === this._context.pageContext.user.loginName.toLocaleLowerCase()) {
+            if (audience.id?.replace(this._claimUserPrefix, "").toLocaleLowerCase() === this._context.pageContext.user.loginName.toLocaleLowerCase()) {
                 return true;
             }
             // Collect all AAD group IDs
-            if (audience.login === "FederatedDirectoryClaimProvider") {
+            if (audience.login === "FederatedDirectoryClaimProvider" && audience.id) {
                 aadGroupIds.push(audience.id.replace(this._claimGroupPrefix, ""));
             }
         }
@@ -59,12 +64,14 @@ export class UserGroupCheck {
      */
     private async isCurrentUserMemberOfGroup(groupId: number): Promise<boolean> {
         try {
-            const groupUsers = await sp.web.siteGroups.getById(groupId).users
-                .usingCaching({
-                    storeName: "local",
-                    key: `isCurrentUserMemberOfGroup-${groupId}-${this._context.pageContext.web.id.toString()}`,
-                    expiration: new Date(new Date().getTime() + (this._audienceCacheDuration * 60 * 60 * 1000))
-                })();
+            const cacheKey = `isCurrentUserMemberOfGroup-${groupId}-${this._context.pageContext.web.id.toString()}`;
+            const expiration = new Date(Date.now() + this._audienceCacheDuration * 60 * 60 * 1000);
+            const groupUsers = await this._sp.web.siteGroups.getById(groupId).users
+                .using(Caching({
+                    store: "local",
+                    keyFactory: () => cacheKey,
+                    expireFunc: () => expiration
+                }))();
 
             // Check if the current user's ID is in the list of group users
             return groupUsers.some(user => user.Id === this._context.pageContext.legacyPageContext.userId);

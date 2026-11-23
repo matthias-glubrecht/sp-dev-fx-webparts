@@ -144,6 +144,40 @@ By default you have to install this web part per site collection where you want 
 
 In order to make it available to absolutely all sites you need apply the *Deploy to non-script sites / modern team site* change as well.
 
+## Property pane controls
+
+The property pane controls are implemented in this sample and do not depend on `@pnp/spfx-property-controls`. The HTML editor uses React Ace; the audience picker searches SharePoint users and groups; and the cache duration field accepts numbers of at least one hour, including fractional hours. Audience selections retain the same property shape used by earlier versions of this web part.
+
+Unlike the previous editor, the replacement does not provide a button to format HTML or scripts.
+
+Because these controls are not the PnP property controls, their PnP-specific telemetry does not apply.
+
+The installed web part version is shown at the top of the property pane.
+
+## Changes in version 1.0.30
+
+This version upgrades the previous SPFx 1.23.2 sample rather than creating a new solution. The solution, feature and web part IDs and existing property names remain unchanged so that existing installations and page data can be upgraded.
+
+### React rendering
+
+SPFx and React were updated to 1.24.1 and 18.3.1 respectively. The edit-mode placeholder now uses `createRoot` and `root.render` instead of `ReactDom.render`. A root is reused while the web part remains in edit mode. Before read mode writes script markup directly into the same DOM container, the root is unmounted and discarded; a later return to edit mode creates a new root. Disposal also unmounts the root. This is necessary because an unmounted React 18 root cannot be reused, and React must not retain ownership of a container that is overwritten with `innerHTML`.
+
+Render tokens prevent an older asynchronous audience check or editor import from overwriting a newer render after a mode change. External scripts are still loaded before inline scripts, with AMD detection restored before inline scripts run.
+
+### Property controls and stored data
+
+The previous `@pnp/spfx-property-controls` 3.25.0 targets React 17; this version replaces it with sample-owned controls rather than taking a beta dependency. The HTML editor uses `react-ace` and Ace, the audience picker uses Fluent UI and SharePoint people search, and the cache duration field validates numbers of at least one hour. Their appearance and interaction can differ from the previous controls. The replacement does not offer a Format button: the initial formatter could alter HTML attribute values or significant whitespace, so it was removed to protect script content.
+
+The new custom fields report changes through SPFx's property pane change callback, which updates the property bag and marks the web part as changed. The code editor is configured from the current `script` property whenever the property pane is refreshed. The previous constructor only bound `scriptUpdate`; its property-update role is now handled by the SPFx callback. Existing audience values retain the previous property shape, including user claims, SharePoint group IDs and Entra group claims.
+
+### PnPjs and build
+
+`@pnp/sp` was upgraded from 2.x to 4.23.0. Each web part initializes an SPFx-context-aware `spfi` instance; SharePoint group queries use PnPjs v4's caching behavior. The previous PnP property-control localization resource was removed along with the controls.
+
+The existing Heft toolchain was updated for SPFx 1.24.1, with TypeScript 5.8 and matching React types. `npm run build` now runs the production build and Jest tests before producing the `.sppkg`; the solution and feature versions were raised to 1.0.30.0. The sample-specific dependency overrides are retained in `package.json`.
+
+The web part was tested in a browser on SharePoint Online and the observed result was satisfactory. This was a smoke test, not exhaustive validation of all configurations or existing page data. The automated tests cover audience mapping, property field changes and the React root lifecycle, but use mocked SPFx services and UI components. Additional tenant testing is recommended, particularly for existing page data, people and group selection, mode changes and script execution.
+
 ## Compatibility
 
 | :warning: Important          |
@@ -153,13 +187,13 @@ In order to make it available to absolutely all sites you need apply the *Deploy
 
 This sample is optimally compatible with the following environment configuration:
 
-![SPFx 1.20.0](https://img.shields.io/badge/SPFx-1.20.0-green.svg)
-![Node.js v18 ](https://img.shields.io/badge/Node.js-v18-green.svg) 
+![SPFx 1.24.1](https://img.shields.io/badge/SPFx-1.24.1-green.svg)
+![Node.js v22, v24, v26](https://img.shields.io/badge/Node.js-v22%20%7C%20v24%20%7C%20v26-green.svg)
 ![Compatible with SharePoint Online](https://img.shields.io/badge/SharePoint%20Online-Compatible-green.svg)
 ![Does not work with SharePoint 2019](https://img.shields.io/badge/SharePoint%20Server%202019-Incompatible-red.svg "SharePoint Server 2019 requires SPFx 1.4.1 or lower")
 ![Does not work with SharePoint 2016 (Feature Pack 2)](https://img.shields.io/badge/SharePoint%20Server%202016%20(Feature%20Pack%202)-Incompatible-red.svg "SharePoint Server 2016 Feature Pack 2 requires SPFx 1.1")
 ![Local Workbench Unsupported](https://img.shields.io/badge/Local%20Workbench-Unsupported-red.svg "Local workbench is no longer available as of SPFx 1.13 and above")
-![Hosted Workbench Compatible](https://img.shields.io/badge/Hosted%20Workbench-Compatible-green.svg)
+![Hosted Workbench Deprecated](https://img.shields.io/badge/Hosted%20Workbench-Deprecated-yellow.svg "The hosted workbench is retired on December 1, 2026")
 ![Compatible with Remote Containers](https://img.shields.io/badge/Remote%20Containers-Compatible-green.svg)
 
 ## Applies to
@@ -206,22 +240,29 @@ Version|Date|Comments
 1.0.24.0|March 8, 2024|Upgrade to SPFx 1.18.2
 1.0.25.0|September 25, 2024|Upgrade to SPFx 1.19.0, added support for audience targeting using SharePoint Groups, Entra Groups and individuals.
 1.0.26.0|October 1, 2024|Upgrade to SPFx 1.20.0
-1.0.27.0|November 19, 2025|Upgrade to SPFx 1.20.1, added support for loading scripts via Function constructor to comply with CSP policies.
+1.0.27.0|November 19, 2025|Upgrade to SPFx 1.21.1 and execute inline scripts using the Function constructor when the CSP permits `unsafe-eval`.
+1.0.28.0|November 23, 2026|Upgrade to SPFx 1.22.2 and migrate the build toolchain from Gulp to Heft.
+1.0.29.0|November 23, 2026|Upgrade to SPFx 1.23.2.
+1.0.30.0|November 23, 2026|Upgrade to SPFx 1.24.1 and React 18, migrate to PnPjs v4, and replace the PnP property controls.
 
 ## Minimal Path to Awesome
 
 ### Testing
 
 * Clone this repository
-* In the command line run:
-  * `npm install`
-  * `gulp serve`
+* Use Node.js 22.14.0 or later in the 22.x release line, Node.js 24, or Node.js 26. The `.nvmrc` file selects the version used for this sample's development.
+* In the project folder run `npm install`, `npm run build`, and `npx heft start --nobrowser`.
+* Open a modern SharePoint test page that you can edit and append `?loadSPFX=true&debugManifestsFile=https://localhost:4321/temp/build/manifests.js` to its URL. If the URL already contains query parameters, use `&` instead of `?`.
+* Allow the debug scripts, edit the page, and add the Modern Script Editor web part. See [Debug SharePoint Framework solutions on modern pages](https://learn.microsoft.com/sharepoint/dev/spfx/debug-modern-pages).
+* The local HTTPS server requires a trusted development certificate. A dev container exports its CA certificate as `spfx-dev-cert.cer` and `spfx-dev-cert.pem`; trust the appropriate file on the host only if permitted by your organization's policies. See [opening a sample using a development container](https://aka.ms/spfx-devcontainer).
+
+The build also writes a bundle analysis report to `temp/stats/react-script-editor.stats.html`.
 
 ### Deploy
 
-* `gulp clean`
-* `gulp bundle --ship`
-* `gulp package-solution --ship`
+* `npm run clean`
+* `npx heft build --production`
+* `npx heft package-solution --production`
 * Upload `.sppkg` file from `sharepoint\solution` to your tenant App Catalog
   * E.g.: https://&lt;tenant&gt;.sharepoint.com/sites/AppCatalog/AppCatalog
 * Add the web part to a site collection, and test it on a page

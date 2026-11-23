@@ -1,30 +1,23 @@
 import * as React from 'react';
-import * as ReactDom from 'react-dom';
+import { createRoot, type Root } from 'react-dom/client';
 import { Version, DisplayMode } from '@microsoft/sp-core-library';
 import { SPComponentLoader } from '@microsoft/sp-loader';
 import { BaseClientSideWebPart } from "@microsoft/sp-webpart-base";
-import { IPropertyPaneConfiguration, IPropertyPaneField, PropertyPaneTextField, PropertyPaneToggle } from "@microsoft/sp-property-pane";
+import { IPropertyPaneConfiguration, IPropertyPaneField, PropertyPaneLabel, PropertyPaneTextField, PropertyPaneToggle } from "@microsoft/sp-property-pane";
+import { spfi, SPFx, type SPFI } from '@pnp/sp';
 import { IScriptEditorProps } from './components/IScriptEditorProps';
 import { IScriptEditorWebPartProps } from './IScriptEditorWebPartProps';
 import PropertyPaneLogo from './PropertyPaneLogo';
-import { PrincipalType, PropertyFieldNumber, PropertyFieldPeoplePicker } from '@pnp/spfx-property-controls';
 import { UserGroupCheck } from './AccessCheck';
-import { sp } from '@pnp/sp/presets/all';
+import '@pnp/sp/webs';
+import '@pnp/sp/site-groups/web';
 
 export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEditorWebPartProps> {
-    public _propertyPaneHelper;
-    private _unqiueId;
-    private _externalScriptContent;
-
-    constructor() {
-        super();
-        this.scriptUpdate = this.scriptUpdate.bind(this);
-    }
-
-    public scriptUpdate(_property: string, _oldVal: string, newVal: string) {
-        this.properties.script = newVal;
-        this._propertyPaneHelper.initialValue = newVal;
-    }
+    private _propertyPaneControls: typeof import('./PropertyPaneControls') | undefined;
+    private _externalScriptContent: string | undefined;
+    private _root: Root | undefined;
+    private _renderToken = 0;
+    private _sp: SPFI;
 
     protected async onInit(): Promise<void> {
         if (this.properties.useExternalScript) {
@@ -38,18 +31,22 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
         }
 
         await super.onInit();
-        sp.setup({
-            spfxContext: this.context as any
+        this._sp = spfi().using(SPFx(this.context));
+    }
+
+    public render(): void {
+        const token = ++this._renderToken;
+        void this.renderAsync(token).catch((error) => {
+            console.error('Failed to render the Script Editor:', error);
         });
     }
 
-    public async render(): Promise<void> {
-        this._unqiueId = this.context.instanceId;
-        if (this.displayMode == DisplayMode.Read) {
+    private async renderAsync(token: number): Promise<void> {
+        if (this.displayMode === DisplayMode.Read) {
             if (this.properties.removePadding) {
                 let element = this.domElement.parentElement;
                 // check up to 5 levels up for padding and exit once found
-                for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 5 && element; i++) {
                     const style = window.getComputedStyle(element);
                     const hasPadding = style.paddingTop !== "0px";
                     if (hasPadding) {
@@ -62,26 +59,37 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
                 }
             }
 
-            ReactDom.unmountComponentAtNode(this.domElement);
+            this.unmountReact();
+            this.domElement.innerHTML = '';
             if (this.properties.audiences) {
-                const checker = new UserGroupCheck(this.properties.audiences, this.properties.audienceCacheDuration, this.context);
+                const checker = new UserGroupCheck(this.properties.audiences, this.properties.audienceCacheDuration, this.context, this._sp);
                 const isInAudience = await checker.CheckAudiences();
+                if (token !== this._renderToken) return;
                 if (!isInAudience) return;
             }
 
-            this.domElement.innerHTML = this.properties.useExternalScript ? this._externalScriptContent : this.properties.script;
-            this.executeScript(this.domElement);
+            if (token !== this._renderToken) return;
+            this.domElement.innerHTML = this.properties.useExternalScript
+                ? (this._externalScriptContent || '')
+                : (this.properties.script || '');
+            await this.executeScript(this.domElement, token);
         } else {
-            this.renderEditor();
+            await this.renderEditor(token);
         }
     }
 
-    private async renderEditor() {
+    private async renderEditor(token: number): Promise<void> {
         // Dynamically load the editor pane to reduce overall bundle size
         const editorPopUp = await import(
             /* webpackChunkName: 'scripteditor' */
             './components/ScriptEditor'
         );
+        if (token !== this._renderToken || this.displayMode === DisplayMode.Read) return;
+
+        if (!this._root) {
+            this.domElement.innerHTML = '';
+            this._root = createRoot(this.domElement);
+        }
         const element: React.ReactElement<IScriptEditorProps> = React.createElement(
             editorPopUp.default,
             {
@@ -91,7 +99,20 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
                 key: "pnp" + new Date().getTime()
             }
         );
-        ReactDom.render(element, this.domElement);
+        this._root.render(element);
+    }
+
+    private unmountReact(): void {
+        if (this._root) {
+            this._root.unmount();
+            this._root = undefined;
+        }
+    }
+
+    protected onDispose(): void {
+        this._renderToken++;
+        this.unmountReact();
+        super.onDispose();
     }
 
     protected get dataVersion(): Version {
@@ -99,26 +120,18 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
     }
 
     protected async loadPropertyPaneResources(): Promise<void> {
-        //import { PropertyFieldCodeEditor, PropertyFieldCodeEditorLanguages } from '@pnp/spfx-property-controls/lib/PropertyFieldCodeEditor';
-        const editorProp = await import(
-            /* webpackChunkName: 'scripteditor' */
-            '@pnp/spfx-property-controls/lib/PropertyFieldCodeEditor'
+        this._propertyPaneControls = await import(
+            /* webpackChunkName: 'propertypane-fields' */
+            './PropertyPaneControls'
         );
-
-        this._propertyPaneHelper = editorProp.PropertyFieldCodeEditor('scriptCode', {
-            label: 'Edit HTML Code',
-            panelTitle: 'Edit HTML Code',
-            initialValue: this.properties.script,
-            onPropertyChange: this.scriptUpdate,
-            properties: this.properties,
-            disabled: false,
-            key: 'codeEditorFieldId',
-            language: editorProp.PropertyFieldCodeEditorLanguages.HTML
-        });
     }
 
     protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
+        const controls = this.propertyPaneControls;
         const webPartOptions: IPropertyPaneField<any>[] = [
+            PropertyPaneLabel('webPartVersion', {
+                text: `Web part version: ${this.context.manifest.version}`
+            }),
             PropertyPaneTextField("title", {
                 label: "Title to show in edit mode",
                 value: this.properties.title
@@ -140,25 +153,17 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
                 onText: "Use external script",
                 offText: "Use inline script"
             }),
-            PropertyFieldPeoplePicker('audiences', {
-                label: 'Target Audience',
-                initialData: this.properties.audiences,
-                allowDuplicate: false,
-                principalType: [PrincipalType.SharePoint, PrincipalType.Users, PrincipalType.Security],
-                onPropertyChange: this.onPropertyPaneFieldChanged,
-                context: this.context as any,
-                properties: this.properties,
-                onGetErrorMessage: null,
-                deferredValidationTime: 0,
-                key: 'audienceTargeting'
-            }),
-            PropertyFieldNumber('audienceCacheDuration', {
-                key: 'audienceCacheDuration',
-                label: 'Audience cache duration in hours',
-                description: 'Duration in hours to cache the audience information',
-                value: this.properties.audienceCacheDuration || 24,
-                minValue: 1,
-            })
+            controls.PropertyPaneAudiencePicker(
+                'audiences',
+                this.context,
+                this.properties.audiences || []
+            ),
+            controls.PropertyPaneNumberField(
+                'audienceCacheDuration',
+                'Audience cache duration in hours',
+                'Duration in hours to cache the audience information',
+                this.properties.audienceCacheDuration || 24
+            )
         ];
 
         if (this.properties.useExternalScript) {
@@ -167,7 +172,11 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
                 value: this.properties.externalScript,
             }));
         } else {
-            webPartOptions.push(this._propertyPaneHelper);
+            webPartOptions.push(controls.PropertyPaneCodeEditor('script', {
+                label: 'Edit HTML Code',
+                panelTitle: 'Edit HTML Code',
+                initialValue: this.properties.script
+            }));
         }
 
         if (this.context.sdks.microsoftTeams) {
@@ -194,6 +203,13 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
         };
     }
 
+    private get propertyPaneControls(): typeof import('./PropertyPaneControls') {
+        if (!this._propertyPaneControls) {
+            throw new Error('Property pane controls have not been loaded.');
+        }
+        return this._propertyPaneControls;
+    }
+
 
     private evalScript(elem): void {
         const data = (elem.text || elem.textContent || elem.innerHTML || "");
@@ -209,6 +225,7 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
             try {
                 // Use Function constructor instead of eval for better scoping
                 // This works because SharePoint CSP includes 'unsafe-eval'
+                // eslint-disable-next-line no-new-func -- Inline scripts require CSP to allow unsafe-eval.
                 const scriptFunc = new Function(data);
                 scriptFunc.call(window);
             } catch (error) {
@@ -219,15 +236,11 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
         }
     }
 
-    private nodeName(elem, name) {
-        return elem.nodeName && elem.nodeName.toUpperCase() === name.toUpperCase();
-    }
-
     // Finds and executes scripts in a newly added element's body.
     // Needed since innerHTML does not run scripts.
     //
     // Argument element is an element in the dom.
-    private async executeScript(element: HTMLElement) {
+    private async executeScript(element: HTMLElement, token: number): Promise<void> {
 
         if (this.properties.spPageContextInfo && !window["_spPageContextInfo"]) {
             window["_spPageContextInfo"] = this.context.pageContext.legacyPageContext;
@@ -263,37 +276,45 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
             }
         }
 
-        let oldamd = null;
-        if (window["define"] && window["define"].amd) {
-            oldamd = window["define"].amd;
-            window["define"].amd = null;
+        const amdWindow = window as Window & { define?: { amd?: unknown } };
+        let oldamd: unknown = null;
+        if (amdWindow.define && amdWindow.define.amd) {
+            oldamd = amdWindow.define.amd;
+            amdWindow.define.amd = null;
         }
 
-        for (let i = 0; i < urls.length; i++) {
-            try {
-                let scriptUrl = urls[i];
-                // Add unique param to force load on each run to overcome smart navigation in the browser as needed
-                const prefix = scriptUrl.indexOf('?') === -1 ? '?' : '&';
-                scriptUrl += prefix + 'pnp=' + new Date().getTime();
-                await SPComponentLoader.loadScript(scriptUrl, { globalExportsName: "ScriptGlobal" });
-            } catch (error) {
-                if (console.error) {
+        try {
+            for (let i = 0; i < urls.length; i++) {
+                try {
+                    let scriptUrl = urls[i];
+                    // Add unique param to force load on each run to overcome smart navigation in the browser as needed
+                    const prefix = scriptUrl.indexOf('?') === -1 ? '?' : '&';
+                    scriptUrl += prefix + 'pnp=' + new Date().getTime();
+                    await SPComponentLoader.loadScript(scriptUrl, { globalExportsName: "ScriptGlobal" });
+                } catch (error) {
                     console.error(error);
                 }
+                if (token !== this._renderToken) return;
             }
-        }
-        if (oldamd) {
-            window["define"].amd = oldamd;
-        }
 
-        for (let i = 0; scripts[i]; i++) {
-            const scriptTag = scripts[i];
-            if (scriptTag.parentNode) { scriptTag.parentNode.removeChild(scriptTag); }
-            this.evalScript(scripts[i]);
-        }
-        // execute any onload people have added
-        for (let i = 0; onLoads[i]; i++) {
-            onLoads[i]();
+            if (oldamd) {
+                amdWindow.define.amd = oldamd;
+                oldamd = null;
+            }
+
+            for (let i = 0; scripts[i]; i++) {
+                const scriptTag = scripts[i];
+                if (scriptTag.parentNode) { scriptTag.parentNode.removeChild(scriptTag); }
+                this.evalScript(scripts[i]);
+            }
+            // execute any onload people have added
+            for (let i = 0; onLoads[i]; i++) {
+                onLoads[i]();
+            }
+        } finally {
+            if (oldamd) {
+                amdWindow.define.amd = oldamd;
+            }
         }
     }
 }
