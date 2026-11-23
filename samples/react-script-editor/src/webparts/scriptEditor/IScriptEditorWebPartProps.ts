@@ -1,4 +1,4 @@
-import type { IPropertyFieldGroupOrPerson } from "@pnp/spfx-property-controls/lib/PropertyFieldPeoplePicker";
+import type { IAudience } from './IAudience';
 
 export interface IScriptEditorWebPartProps {
   script: string;
@@ -8,6 +8,6 @@ export interface IScriptEditorWebPartProps {
   removePadding: boolean;
   spPageContextInfo: boolean;
   teamsContext: boolean;
-  audiences: IPropertyFieldGroupOrPerson[];
+  audiences: IAudience[];
   audienceCacheDuration: number;
 }
