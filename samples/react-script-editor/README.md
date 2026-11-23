@@ -206,22 +206,27 @@ Version|Date|Comments
 1.0.24.0|March 8, 2024|Upgrade to SPFx 1.18.2
 1.0.25.0|September 25, 2024|Upgrade to SPFx 1.19.0, added support for audience targeting using SharePoint Groups, Entra Groups and individuals.
 1.0.26.0|October 1, 2024|Upgrade to SPFx 1.20.0
-1.0.27.0|November 19, 2025|Upgrade to SPFx 1.20.1, added support for loading scripts via Function constructor to comply with CSP policies.
+1.0.27.0|November 19, 2025|Upgrade to SPFx 1.21.1 and execute inline scripts using the Function constructor when the CSP permits `unsafe-eval`.
+1.0.28.0|November 23, 2026|Upgrade to SPFx 1.22.2 and migrate the build toolchain from Gulp to Heft.
 
 ## Minimal Path to Awesome
 
 ### Testing
 
 * Clone this repository
-* In the command line run:
-  * `npm install`
-  * `gulp serve`
+* Use Node.js 22.14.0 or later within the 22.x release line; `.nvmrc` specifies the version used for development.
+* In the project folder run `npm install`, `npm run build`, and `npx heft start --nobrowser`.
+* Open a modern SharePoint test page that you can edit and append `?loadSPFX=true&debugManifestsFile=https://localhost:4321/temp/build/manifests.js` to its URL. If the URL already contains query parameters, use `&` instead of `?`.
+* Allow the debug scripts, edit the page, and add the Modern Script Editor web part. See [Debug SharePoint Framework solutions on modern pages](https://learn.microsoft.com/sharepoint/dev/spfx/debug-modern-pages).
+* The local HTTPS server requires a trusted development certificate. A dev container exports its CA certificate as `spfx-dev-cert.cer` and `spfx-dev-cert.pem`; trust the appropriate file on the host only if permitted by your organization's policies. See [opening a sample using a development container](https://aka.ms/spfx-devcontainer).
+
+The existing PnP controls depend on older SPFx packages, so `npm install` can report `EBADENGINE` warnings under Node.js 22. The build also writes a bundle analysis report to `temp/stats/react-script-editor.stats.html`.
 
 ### Deploy
 
-* `gulp clean`
-* `gulp bundle --ship`
-* `gulp package-solution --ship`
+* `npm run clean`
+* `npx heft build --production`
+* `npx heft package-solution --production`
 * Upload `.sppkg` file from `sharepoint\solution` to your tenant App Catalog
   * E.g.: https://&lt;tenant&gt;.sharepoint.com/sites/AppCatalog/AppCatalog
 * Add the web part to a site collection, and test it on a page
