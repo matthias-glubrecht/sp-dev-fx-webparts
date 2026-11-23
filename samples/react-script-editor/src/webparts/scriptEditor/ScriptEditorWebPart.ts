@@ -11,6 +11,7 @@ import { PropertyFieldNumber } from '@pnp/spfx-property-controls/lib/PropertyFie
 import { PrincipalType, PropertyFieldPeoplePicker } from '@pnp/spfx-property-controls/lib/PropertyFieldPeoplePicker';
 import { UserGroupCheck } from './AccessCheck';
 import { sp } from '@pnp/sp';
+import PnPTelemetry from '@pnp/telemetry-js';
 
 export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEditorWebPartProps> {
     public _propertyPaneHelper;
@@ -28,6 +29,11 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
     }
 
     protected async onInit(): Promise<void> {
+        PnPTelemetry.getInstance().optOut();
+        if (this.properties.title === 'The Modern Script Editor web part!') {
+            this.properties.title = 'The Modern Script Editor Web Part (No Telemetry Edition)';
+        }
+
         if (this.properties.useExternalScript) {
             try {
                 const prefix = this.properties.externalScript.indexOf('?') === -1 ? '?' : '&';
@@ -124,6 +130,9 @@ export default class ScriptEditorWebPart extends BaseClientSideWebPart<IScriptEd
 
     protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
         const webPartOptions: IPropertyPaneField<any>[] = [
+            PropertyPaneLabel('webPartEdition', {
+                text: 'No Telemetry Edition (PnP)'
+            }),
             PropertyPaneLabel('webPartVersion', {
                 text: `Web part version: ${this.context.manifest.version}`
             }),

@@ -146,9 +146,11 @@ In order to make it available to absolutely all sites you need apply the *Deploy
 
 ## PnP telemetry
 
-The PnP property pane controls used by this web part collect usage telemetry by default. See the [PnP property controls telemetry documentation](https://pnp.github.io/sp-dev-fx-property-controls/#telemetry) for details and the supported opt-out.
+This No Telemetry Edition uses the [PnP property controls opt-out](https://pnp.github.io/sp-dev-fx-property-controls/#telemetry) during web part initialization. It disables further PnP telemetry events on the shared page instance, including events from other controls using that instance. Events already queued before initialization are not cancelled.
 
-The installed web part version is shown at the top of the property pane.
+This does not disable Microsoft telemetry or telemetry from scripts added to the web part. The property pane identifies the edition and shows the installed web part version. Existing custom edit-mode titles are preserved; the previous default title is updated to identify this edition.
+
+The solution package version is `1.0.29.1`; the web part component version shown in the property pane is `1.0.29`. This edition retains the standard solution and web part IDs so it can replace the standard `1.0.29.0` package rather than being installed alongside it.
 
 ## Compatibility
 
