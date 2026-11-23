@@ -1,4 +1,4 @@
-import { IPropertyFieldGroupOrPerson } from "@pnp/spfx-property-controls";
+import type { IPropertyFieldGroupOrPerson } from "@pnp/spfx-property-controls/lib/PropertyFieldPeoplePicker";
 
 export interface IScriptEditorWebPartProps {
   script: string;

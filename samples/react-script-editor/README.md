@@ -144,6 +144,12 @@ By default you have to install this web part per site collection where you want 
 
 In order to make it available to absolutely all sites you need apply the *Deploy to non-script sites / modern team site* change as well.
 
+## PnP telemetry
+
+The PnP property pane controls used by this web part collect usage telemetry by default. See the [PnP property controls telemetry documentation](https://pnp.github.io/sp-dev-fx-property-controls/#telemetry) for details and the supported opt-out.
+
+The installed web part version is shown at the top of the property pane.
+
 ## Compatibility
 
 | :warning: Important          |
@@ -153,13 +159,13 @@ In order to make it available to absolutely all sites you need apply the *Deploy
 
 This sample is optimally compatible with the following environment configuration:
 
-![SPFx 1.20.0](https://img.shields.io/badge/SPFx-1.20.0-green.svg)
-![Node.js v18 ](https://img.shields.io/badge/Node.js-v18-green.svg) 
+![SPFx 1.23.2](https://img.shields.io/badge/SPFx-1.23.2-green.svg)
+![Node.js v22](https://img.shields.io/badge/Node.js-v22-green.svg)
 ![Compatible with SharePoint Online](https://img.shields.io/badge/SharePoint%20Online-Compatible-green.svg)
 ![Does not work with SharePoint 2019](https://img.shields.io/badge/SharePoint%20Server%202019-Incompatible-red.svg "SharePoint Server 2019 requires SPFx 1.4.1 or lower")
 ![Does not work with SharePoint 2016 (Feature Pack 2)](https://img.shields.io/badge/SharePoint%20Server%202016%20(Feature%20Pack%202)-Incompatible-red.svg "SharePoint Server 2016 Feature Pack 2 requires SPFx 1.1")
 ![Local Workbench Unsupported](https://img.shields.io/badge/Local%20Workbench-Unsupported-red.svg "Local workbench is no longer available as of SPFx 1.13 and above")
-![Hosted Workbench Compatible](https://img.shields.io/badge/Hosted%20Workbench-Compatible-green.svg)
+![Hosted Workbench Deprecated](https://img.shields.io/badge/Hosted%20Workbench-Deprecated-yellow.svg "The hosted workbench is retired on December 1, 2026")
 ![Compatible with Remote Containers](https://img.shields.io/badge/Remote%20Containers-Compatible-green.svg)
 
 ## Applies to
@@ -208,6 +214,7 @@ Version|Date|Comments
 1.0.26.0|October 1, 2024|Upgrade to SPFx 1.20.0
 1.0.27.0|November 19, 2025|Upgrade to SPFx 1.21.1 and execute inline scripts using the Function constructor when the CSP permits `unsafe-eval`.
 1.0.28.0|November 23, 2026|Upgrade to SPFx 1.22.2 and migrate the build toolchain from Gulp to Heft.
+1.0.29.0|November 23, 2026|Upgrade to SPFx 1.23.2.
 
 ## Minimal Path to Awesome
 
@@ -220,7 +227,7 @@ Version|Date|Comments
 * Allow the debug scripts, edit the page, and add the Modern Script Editor web part. See [Debug SharePoint Framework solutions on modern pages](https://learn.microsoft.com/sharepoint/dev/spfx/debug-modern-pages).
 * The local HTTPS server requires a trusted development certificate. A dev container exports its CA certificate as `spfx-dev-cert.cer` and `spfx-dev-cert.pem`; trust the appropriate file on the host only if permitted by your organization's policies. See [opening a sample using a development container](https://aka.ms/spfx-devcontainer).
 
-The existing PnP controls depend on older SPFx packages, so `npm install` can report `EBADENGINE` warnings under Node.js 22. The build also writes a bundle analysis report to `temp/stats/react-script-editor.stats.html`.
+The build also writes a bundle analysis report to `temp/stats/react-script-editor.stats.html`.
 
 ### Deploy
 

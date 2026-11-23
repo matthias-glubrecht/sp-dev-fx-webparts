@@ -1,45 +1,39 @@
 {
     "name": "pnp-script-editor",
-    "version": "1.0.28",
+    "version": "1.0.29",
     "private": true,
     "main": "lib/index.js",
-    "resolutions": {
-        "@types/react": "16.8.8"
+    "overrides": {
+        "@rushstack/heft": "1.2.17"
     },
     "engines": {
         "node": ">=22.14.0 < 23.0.0"
     },
     "dependencies": {
-        "@fluentui/react": "8.106.4",
-        "@microsoft/sp-adaptive-card-extension-base": "1.22.2",
-        "@microsoft/sp-core-library": "1.22.2",
-        "@microsoft/sp-loader": "1.22.2",
-        "@microsoft/sp-lodash-subset": "1.22.2",
-        "@microsoft/sp-property-pane": "1.22.2",
-        "@microsoft/sp-webpart-base": "1.22.2",
+        "@microsoft/sp-core-library": "1.23.2",
+        "@microsoft/sp-loader": "1.23.2",
+        "@microsoft/sp-property-pane": "1.23.2",
+        "@microsoft/sp-webpart-base": "1.23.2",
         "@pnp/sp": "^2.5.0",
-        "@pnp/spfx-controls-react": "3.19.0",
-        "@pnp/spfx-property-controls": "3.18.0",
+        "@pnp/spfx-property-controls": "3.25.0",
         "react": "17.0.1",
         "react-dom": "17.0.1",
         "tslib": "2.3.1"
     },
     "devDependencies": {
-        "@microsoft/eslint-config-spfx": "1.22.2",
-        "@microsoft/eslint-plugin-spfx": "1.22.2",
-        "@microsoft/sp-module-interfaces": "1.22.2",
-        "@microsoft/spfx-heft-plugins": "1.22.2",
-        "@microsoft/spfx-web-build-rig": "1.22.2",
-        "@rushstack/eslint-config": "4.5.2",
-        "@rushstack/heft": "1.1.2",
-        "@types/heft-jest": "1.0.2",
+        "@microsoft/eslint-config-spfx": "1.23.2",
+        "@microsoft/eslint-plugin-spfx": "1.23.2",
+        "@microsoft/sp-module-interfaces": "1.23.2",
+        "@microsoft/spfx-heft-plugins": "1.23.2",
+        "@microsoft/spfx-web-build-rig": "1.23.2",
+        "@rushstack/heft": "1.2.17",
+        "@types/jest": "30.0.0",
         "@types/react": "17.0.45",
         "@types/react-dom": "17.0.17",
         "@types/webpack-env": "~1.15.2",
-        "@typescript-eslint/parser": "8.46.2",
-        "eslint": "8.57.1",
+        "eslint": "9.37.0",
         "eslint-plugin-promise": "7.2.1",
-        "eslint-plugin-react-hooks": "4.3.0",
+        "eslint-plugin-react-hooks": "5.2.0",
         "typescript": "5.3.3",
         "webpack-bundle-analyzer": "4.10.2"
     },

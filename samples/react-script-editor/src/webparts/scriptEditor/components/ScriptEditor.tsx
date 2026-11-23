@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { IScriptEditorProps } from './IScriptEditorProps';
-import { Placeholder } from "@pnp/spfx-controls-react/lib/Placeholder";
+import styles from './ScriptEditor.module.scss';
 
 export default class ScriptEditor extends React.Component<IScriptEditorProps, any> {
     constructor(props: IScriptEditorProps, state: any) {
@@ -14,7 +14,7 @@ export default class ScriptEditor extends React.Component<IScriptEditorProps, an
         this.setState({ script: this.props.script, loaded: this.props.script });
     }
 
-    private _showDialog() {
+    private _showDialog(): void {
         this.props.propPaneHandle.open();
     }
 
@@ -22,11 +22,16 @@ export default class ScriptEditor extends React.Component<IScriptEditorProps, an
         const viewMode = <span dangerouslySetInnerHTML={{ __html: this.state.script }} />;
         return (
             <div className='ms-Fabric'>
-                <Placeholder iconName='JS'
-                    iconText={this.props.title}
-                    description='Please configure the web part'
-                    buttonLabel='Edit markup'
-                    onConfigure={this._showDialog} />
+                <div className={styles.scriptEditorPlaceholder}>
+                    <span className={styles.scriptEditorPlaceholderIcon} aria-hidden='true'>JS</span>
+                    <div className={styles.scriptEditorPlaceholderContent}>
+                        <h2 className={styles.scriptEditorPlaceholderTitle}>{this.props.title}</h2>
+                        <p className={styles.scriptEditorPlaceholderDescription}>Please configure the web part</p>
+                        <button className={styles.scriptEditorPlaceholderButton} type='button' onClick={this._showDialog}>
+                            Edit markup
+                        </button>
+                    </div>
+                </div>
                 {viewMode}
             </div>);
     }

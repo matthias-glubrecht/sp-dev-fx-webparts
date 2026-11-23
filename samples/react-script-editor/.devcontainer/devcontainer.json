@@ -1,6 +1,6 @@
 // For more information on how to run this SPFx project in a VS Code Remote Container, please visit https://aka.ms/spfx-devcontainer
 {
-	"name": "SPFx 1.22.2",
+	"name": "SPFx 1.23.2",
 	"image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {},

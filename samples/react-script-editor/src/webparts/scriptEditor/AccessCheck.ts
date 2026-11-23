@@ -1,6 +1,8 @@
-import { WebPartContext } from "@microsoft/sp-webpart-base";
-import { sp } from "@pnp/sp/presets/all";
-import { IPropertyFieldGroupOrPerson } from "@pnp/spfx-property-controls";
+import type { WebPartContext } from "@microsoft/sp-webpart-base";
+import { sp } from "@pnp/sp";
+import "@pnp/sp/webs";
+import "@pnp/sp/site-groups";
+import type { IPropertyFieldGroupOrPerson } from "@pnp/spfx-property-controls/lib/PropertyFieldPeoplePicker";
 
 export class UserGroupCheck {
 

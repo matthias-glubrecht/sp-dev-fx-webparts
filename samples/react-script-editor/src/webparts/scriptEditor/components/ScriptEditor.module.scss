@@ -1,1 +1,56 @@
-@import '~@fluentui/react/dist/sass/References.scss'
+.scriptEditorPlaceholder {
+    align-items: center;
+    border: 1px solid #d2d0ce;
+    border-radius: 2px;
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+}
+
+.scriptEditorPlaceholderIcon {
+    align-items: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    display: flex;
+    flex: 0 0 40px;
+    font-size: 14px;
+    font-weight: 600;
+    height: 40px;
+    justify-content: center;
+}
+
+.scriptEditorPlaceholderContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.scriptEditorPlaceholderTitle,
+.scriptEditorPlaceholderDescription {
+    margin: 0;
+}
+
+.scriptEditorPlaceholderTitle {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.scriptEditorPlaceholderButton {
+    align-self: flex-start;
+    background-color: var(--themePrimary, #0078d4);
+    border: 0;
+    border-radius: 2px;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    padding: 6px 12px;
+
+    &:hover {
+        background-color: var(--themeDark, #005a9e);
+    }
+
+    &:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+    }
+}
