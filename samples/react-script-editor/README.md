@@ -191,6 +191,8 @@ snyk sbom test --file=.\pnp-script-editor.sppkg.cdx.json --json
 
 On November 27, 2026, Snyk reported **no known vulnerabilities** across the 24 distinct bundled npm dependencies it identified in the SBOM. This is a point-in-time result for the bundled npm dependencies, not a guarantee that the SPPKG is vulnerability-free. It does not cover the SharePoint host, scripts inserted by page authors, scripts loaded from external URLs, or build-only dependencies.
 
+The separate scans of the development and build dependency tree reported 16 distinct findings. None of the affected npm package versions appears in the package-specific SBOM. Those findings remain relevant to the development and build environment, but do not apply to the dependencies shipped in this SPPKG.
+
 ## Changes in version 1.0.30
 
 This version upgrades the previous SPFx 1.23.2 sample rather than creating a new solution. The solution, feature and web part IDs and existing property names remain unchanged so that existing installations and page data can be upgraded.
