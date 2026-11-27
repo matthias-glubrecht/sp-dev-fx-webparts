@@ -30,6 +30,7 @@
         "tslib": "2.3.1"
     },
     "devDependencies": {
+        "@cyclonedx/webpack-plugin": "5.3.3",
         "@microsoft/eslint-config-spfx": "1.24.1",
         "@microsoft/eslint-plugin-spfx": "1.24.1",
         "@microsoft/sp-module-interfaces": "1.24.1",
@@ -43,13 +44,15 @@
         "eslint": "9.37.0",
         "eslint-plugin-promise": "7.2.1",
         "eslint-plugin-react-hooks": "5.2.0",
+        "jszip": "3.8.0",
         "typescript": "~5.8.0",
         "webpack-bundle-analyzer": "4.10.2"
     },
     "scripts": {
-        "build": "heft test --clean --production && heft package-solution --production",
+        "build": "heft test --clean --production && heft package-solution --production && node scripts/generate-sppkg-sbom.js",
         "clean": "heft clean",
         "start": "heft start",
-        "test": "heft test"
+        "test": "heft test",
+        "test:sbom": "node --test scripts/generate-sppkg-sbom.test.js"
     }
 }

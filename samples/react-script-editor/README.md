@@ -158,7 +158,38 @@ The installed web part version is shown at the top of the property pane.
 
 The transitive `fast-uri` dependency is pinned to 3.1.9. Ajv 6 is constrained to `>=6.14.0 <7` and resolves to 6.15.0 in the lockfile; Ajv 8 versions are unchanged. No web part source code changed in this release.
 
-The release includes a CycloneDX 1.6 SBOM generated from `package-lock.json` with `@cyclonedx/cyclonedx-npm` 7.0.1. It covers the npm dependency tree, including development and build dependencies; it is not an inventory of the packages actually included in the `.sppkg` or a security assessment.
+### Verified SharePoint package
+
+Download `pnp-script-editor.sppkg`, `pnp-script-editor.sppkg.cdx.json`, and `evidence.json` from [release 1.0.31](https://github.com/matthias-glubrecht/sp-dev-fx-webparts/releases/tag/react-script-editor-v1.0.31). To confirm you have the exact package covered by the SBOM, check its SHA-256 before uploading it to the SharePoint App Catalog:
+
+```powershell
+Get-FileHash .\pnp-script-editor.sppkg -Algorithm SHA256
+```
+
+The expected SHA-256 is `e4bbea8e389df1680cbee9e4bb2bb075614fc036e8bf1640a5690b20462108e6`. It is also recorded in the SBOM and its evidence file. The separate `pnp-script-editor-1.0.31-dependency-sbom.cdx.json` describes the broader npm lockfile, including build tools; it is not the package-specific SBOM.
+
+### How the package-specific SBOM was generated
+
+`npm run build` uses Heft and Webpack 5 with `@cyclonedx/webpack-plugin` 5.3.3. The generator selects npm package instances from the emitted production chunks, checks the SHA-256 of every JavaScript bundle against the SPPKG, and validates the CycloneDX 1.6 JSON. It saves the SPPKG, SBOM, and evidence (including bundle mappings and archive file hashes) under `SBOM/releases/<solution-version>/<package-sha256-prefix>/`.
+
+For the already-released 1.0.31 package, the JavaScript bundles were rebuilt with Node.js 22.23.1 and matched the four JavaScript files in the release SPPKG byte for byte. The 25 bundled npm package instances also matched the release lockfile by version and integrity. The evidence is explicitly marked as a reproduction, not a capture of the original build. To repeat the check using the SBOM-enabled source on `main`, keep the downloaded release SPPKG in a separate directory so the build does not overwrite it:
+
+```powershell
+npm ci
+npm run build
+npm run test:sbom
+node .\scripts\generate-sppkg-sbom.js "C:\Downloads\pnp-script-editor.sppkg"
+```
+
+### Snyk scan
+
+The following scans the package-specific SBOM. Run it from the directory containing the downloaded SBOM, or pass its full path. The command sends the SBOM to Snyk and requires a Snyk Enterprise plan.
+
+```powershell
+snyk sbom test --file=.\pnp-script-editor.sppkg.cdx.json --json
+```
+
+On November 27, 2026, Snyk reported **no known vulnerabilities** across the 24 distinct bundled npm dependencies it identified in the SBOM. This is a point-in-time result for the bundled npm dependencies, not a guarantee that the SPPKG is vulnerability-free. It does not cover the SharePoint host, scripts inserted by page authors, scripts loaded from external URLs, or build-only dependencies.
 
 ## Changes in version 1.0.30
 
