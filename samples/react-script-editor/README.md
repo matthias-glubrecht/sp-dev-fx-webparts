@@ -154,6 +154,12 @@ Because these controls are not the PnP property controls, their PnP-specific tel
 
 The installed web part version is shown at the top of the property pane.
 
+## Changes in version 1.0.31
+
+The transitive `fast-uri` dependency is pinned to 3.1.9. Ajv 6 is constrained to `>=6.14.0 <7` and resolves to 6.15.0 in the lockfile; Ajv 8 versions are unchanged. No web part source code changed in this release.
+
+The release includes a CycloneDX 1.6 SBOM generated from `package-lock.json` with `@cyclonedx/cyclonedx-npm` 7.0.1. It covers the npm dependency tree, including development and build dependencies; it is not an inventory of the packages actually included in the `.sppkg` or a security assessment.
+
 ## Changes in version 1.0.30
 
 This version upgrades the previous SPFx 1.23.2 sample rather than creating a new solution. The solution, feature and web part IDs and existing property names remain unchanged so that existing installations and page data can be upgraded.
@@ -244,6 +250,7 @@ Version|Date|Comments
 1.0.28.0|November 23, 2026|Upgrade to SPFx 1.22.2 and migrate the build toolchain from Gulp to Heft.
 1.0.29.0|November 23, 2026|Upgrade to SPFx 1.23.2.
 1.0.30.0|November 23, 2026|Upgrade to SPFx 1.24.1 and React 18, migrate to PnPjs v4, and replace the PnP property controls.
+1.0.31.0|November 27, 2026|Update transitive fast-uri and Ajv 6 dependencies.
 
 ## Minimal Path to Awesome
 
